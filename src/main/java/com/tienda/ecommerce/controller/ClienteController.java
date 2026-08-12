@@ -1,36 +1,60 @@
 package com.tienda.ecommerce.controller;
-import com.tienda.ecommerce.dto.ClienteDTO;
+
 import com.tienda.ecommerce.entity.Cliente;
-import com.tienda.ecommerce.mapper.ClienteMapper;
 import com.tienda.ecommerce.service.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
+@Tag(name = "Clientes", description = "Endpoints para la gestión de clientes")
 public class ClienteController {
-    private final ClienteService service;
-    private final ClienteMapper mapper;
 
-    @Operation(summary = "Obtener todos", responses = { @ApiResponse(responseCode = "200", description = "Lista recuperada exitosamente") })
+    private final ClienteService service;
+
     @GetMapping
-    public ResponseEntity<List<ClienteDTO>> getAll() {
-        return ResponseEntity.ok(service.findAll().stream().map(mapper::toDTO).collect(Collectors.toList()));
+    @Operation(summary = "Obtener todos los clientes")
+    @ApiResponse(responseCode = "200", description = "Lista obtenida con éxito")
+    public ResponseEntity<List<Cliente>> findAll() {
+        return ResponseEntity.ok(service.findAll());
     }
 
-    @Operation(summary = "Crear nuevo", responses = { @ApiResponse(responseCode = "201", description = "Creado exitosamente") })
+    @GetMapping("/{id}")
+    @Operation(summary = "Obtener cliente por ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cliente encontrado"),
+            @ApiResponse(responseCode = "404", description = "Cliente no encontrado")
+    })
+    public ResponseEntity<Cliente> findById(@PathVariable Integer id) {
+        return service.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
-    public ResponseEntity<ClienteDTO> create(@org.springframework.web.bind.annotation.RequestBody ClienteDTO dto) {
-        Cliente saved = service.save(mapper.toEntity(dto));
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(saved));
+    @Operation(summary = "Crear nuevo cliente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Cliente creado exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Petición inválida")
+    })
+    public ResponseEntity<Cliente> create(@RequestBody Cliente cliente) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(cliente));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar cliente por ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Cliente eliminado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Cliente no encontrado")
+    })
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        return service.deleteById(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }
