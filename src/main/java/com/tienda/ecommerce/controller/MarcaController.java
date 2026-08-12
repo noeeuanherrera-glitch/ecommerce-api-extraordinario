@@ -3,6 +3,10 @@ package com.tienda.ecommerce.controller;
 import com.tienda.ecommerce.entity.Marca;
 import com.tienda.ecommerce.service.MarcaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +39,9 @@ public class MarcaController {
             @ApiResponse(responseCode = "404", description = "Marca no encontrada")
     })
     public ResponseEntity<Marca> findById(@PathVariable Integer id) {
-        return service.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -44,7 +50,19 @@ public class MarcaController {
             @ApiResponse(responseCode = "201", description = "Marca creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Petición inválida")
     })
-    public ResponseEntity<Marca> create(@RequestBody Marca marca) {
+    public ResponseEntity<Marca> create(
+            @RequestBody(
+                    description = "Estructura JSON para crear una marca",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = Marca.class),
+                            examples = @ExampleObject(
+                                    value = "{\"nombre\": \"Nike\"}"
+                            )
+                    )
+            )
+            @org.springframework.web.bind.annotation.RequestBody Marca marca
+    ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(marca));
     }
 
@@ -55,6 +73,9 @@ public class MarcaController {
             @ApiResponse(responseCode = "404", description = "Marca no encontrada")
     })
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        return service.deleteById(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        if (service.deleteById(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

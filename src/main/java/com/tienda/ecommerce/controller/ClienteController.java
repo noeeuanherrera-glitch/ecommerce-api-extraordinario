@@ -3,6 +3,10 @@ package com.tienda.ecommerce.controller;
 import com.tienda.ecommerce.entity.Cliente;
 import com.tienda.ecommerce.service.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +39,9 @@ public class ClienteController {
             @ApiResponse(responseCode = "404", description = "Cliente no encontrado")
     })
     public ResponseEntity<Cliente> findById(@PathVariable Integer id) {
-        return service.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -44,7 +50,19 @@ public class ClienteController {
             @ApiResponse(responseCode = "201", description = "Cliente creado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Petición inválida")
     })
-    public ResponseEntity<Cliente> create(@RequestBody Cliente cliente) {
+    public ResponseEntity<Cliente> create(
+            @RequestBody(
+                    description = "Estructura JSON para crear un cliente",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = Cliente.class),
+                            examples = @ExampleObject(
+                                    value = "{\"nombre\": \"Juan Pérez\", \"email\": \"juan.perez@email.com\"}"
+                            )
+                    )
+            )
+            @org.springframework.web.bind.annotation.RequestBody Cliente cliente
+    ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(cliente));
     }
 
@@ -55,6 +73,9 @@ public class ClienteController {
             @ApiResponse(responseCode = "404", description = "Cliente no encontrado")
     })
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        return service.deleteById(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        if (service.deleteById(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

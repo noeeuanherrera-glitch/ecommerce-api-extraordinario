@@ -3,6 +3,10 @@ package com.tienda.ecommerce.controller;
 import com.tienda.ecommerce.entity.Prenda;
 import com.tienda.ecommerce.service.PrendaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,7 +50,19 @@ public class PrendaController {
             @ApiResponse(responseCode = "201", description = "Prenda creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
     })
-    public ResponseEntity<Prenda> create(@RequestBody Prenda prenda) {
+    public ResponseEntity<Prenda> create(
+            @RequestBody(
+                    description = "Estructura JSON para crear una prenda",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = Prenda.class),
+                            examples = @ExampleObject(
+                                    value = "{\"nombre\": \"Playera Deportiva\", \"precio\": 499.99}"
+                            )
+                    )
+            )
+            @org.springframework.web.bind.annotation.RequestBody Prenda prenda
+    ) {
         Prenda nuevaPrenda = service.save(prenda);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevaPrenda);
     }
